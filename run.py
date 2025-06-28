@@ -78,11 +78,5 @@ if __name__ == "__main__":
         print(" No taskId found in response.")
         exit()
 
-    # Polling loop to check task status
-    print(f"📡 Waiting for music to be generated (taskId: {task_id})...")
-    status_url = f"/api/v1/task/{task_id}"
-    audio_url = None
-
-
 
 
