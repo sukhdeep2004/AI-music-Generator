@@ -1,11 +1,12 @@
+from time import time
 import requests
 from urllib import response
 from google import genai
 from google.genai import types
 import http.client
 import json
+import time 
 
-client = genai.Client(api_key="AIzaSyBM24O8IBcbrTMU9GY8Euu_y_E4YInKqkM")
 def valid_music_type(argument):
     response = client.models.generate_content(
         model="gemini-2.0-flash",
@@ -15,11 +16,14 @@ def valid_music_type(argument):
         temperature=0.1
     )
     )
-    print(response.text.lower().strip())
     return "yes" in response.text.lower().strip()
 
 
 if __name__ == "__main__":
+    api_key = input("Enter gemini your API Key: ")
+    client = genai.Client(api_key=api_key)
+    suno_api_key = input("Enter your Suno API Key: ")
+
     print("Please enter the music style you want to generate a music  for:")
 
     user_input = (input("Enter your Choice "))
@@ -46,7 +50,6 @@ if __name__ == "__main__":
         temperature=0.1
     )
     )
-    print(response.text)
 
 
     conn = http.client.HTTPSConnection("apibox.erweima.ai")
@@ -62,28 +65,23 @@ if __name__ == "__main__":
     headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    'Authorization': 'Bearer ebb91a8ee28b4b693350eee0d349cdc7'
+    'Authorization':f'Bearer {suno_api_key}'
     }
     conn.request("POST", "/api/v1/generate", payload, headers)
     res = conn.getresponse()
     data = json.loads(res.read().decode("utf-8"))
     print("🎵 API Response:", data)
 
-    # Extract audio URL (update the key to match the real one)
-    audio_url = data.get("audioUrl")
 
-    if audio_url:
-        print(f"Audio URL: {audio_url}")
-        audio_response = requests.get(audio_url)
+    task_id = data.get("data", {}).get("taskId")
+    if not task_id:
+        print(" No taskId found in response.")
+        exit()
 
-        if audio_response.status_code == 200:
-            with open("generated_music.mp3", "wb") as f:
-                f.write(audio_response.content)
-            print(" Saved audio to 'generated_music.mp3'")
-        else:
-            print(f" Failed to download audio. HTTP {audio_response.status_code}")
-    else:
-        print(" No audio URL found in the response.")
+    # Polling loop to check task status
+    print(f"📡 Waiting for music to be generated (taskId: {task_id})...")
+    status_url = f"/api/v1/task/{task_id}"
+    audio_url = None
 
 
 
